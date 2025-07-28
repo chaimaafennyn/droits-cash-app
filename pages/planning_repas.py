@@ -7,6 +7,7 @@ from fpdf import FPDF
 import matplotlib.pyplot as plt
 
 # ---------- CONFIG ----------
+st.set_page_config(page_title="Planning Repas", layout="wide")
 FICHIER_JSON = "planning.json"
 FICHIER_STOCK = "stock.json"
 FICHIER_RECETTES = "recettes.json"
@@ -46,8 +47,7 @@ def get_week_id(date):
     return date.strftime("%Y-W%U")
 
 # ---------- CHARGEMENT DONNÉES ----------
-st.set_page_config(page_title="Planning Repas", layout="wide")
-st.title("🍽️ Planificateur de Repas Hebdomadaire (Multi-semaines)")
+st.title("📱🍽️ Planning Repas Hebdomadaire - Version Mobile Responsive")
 
 planning_global = charger_json(FICHIER_JSON, {})
 stock = charger_json(FICHIER_STOCK, {})
@@ -75,14 +75,10 @@ jours_traduits = {
 }
 jour_nom = jours_traduits[date_actuelle.strftime("%A")]
 
-st.subheader(f"🗓️ {jour_nom} : Modifier les repas")
-col1, col2, col3 = st.columns(3)
-with col1:
-    petit_dej = st.text_input("🍞 Petit-déjeuner", value=planning[jour_nom].get("Petit-déjeuner", ""))
-with col2:
-    dej = st.text_input("🥗 Déjeuner", value=planning[jour_nom].get("Déjeuner", ""))
-with col3:
-    diner = st.text_input("🍲 Dîner", value=planning[jour_nom].get("Dîner", ""))
+st.subheader(f"🗓️ Modifier les repas du {jour_nom}")
+petit_dej = st.text_area("🍞 Petit-déjeuner", value=planning[jour_nom].get("Petit-déjeuner", ""))
+dej = st.text_area("🥗 Déjeuner", value=planning[jour_nom].get("Déjeuner", ""))
+diner = st.text_area("🍲 Dîner", value=planning[jour_nom].get("Dîner", ""))
 
 if st.button("💾 Enregistrer pour ce jour"):
     planning[jour_nom]["Petit-déjeuner"] = petit_dej
@@ -92,21 +88,10 @@ if st.button("💾 Enregistrer pour ce jour"):
     sauvegarder_json(FICHIER_JSON, planning_global)
     st.success(f"✅ Repas du {jour_nom} enregistré pour {semaine_id}")
 
-# ---------- VUE TABLEAU ----------
-st.markdown("---")
-st.subheader("📊 Modifier toute la semaine dans un tableau")
-df_planning = pd.DataFrame.from_dict(planning, orient='index')
-df_edit = st.data_editor(df_planning, num_rows="fixed", use_container_width=True)
-if st.button("💾 Enregistrer toute la semaine"):
-    planning_modifie = df_edit.to_dict(orient='index')
-    planning_global[semaine_id] = planning_modifie
-    sauvegarder_json(FICHIER_JSON, planning_global)
-    st.success("✅ Planning hebdo enregistré !")
-
 # ---------- SUIVI NUTRITION ----------
 st.markdown("---")
-st.subheader("🍎 Suivi Nutritionnel (Calories par jour)")
-objectif_calories = st.number_input("🎯 Objectif calorique par jour (kcal)", min_value=0, value=2000, step=50)
+st.subheader("🍎 Suivi Nutritionnel")
+objectif_calories = st.number_input("🎯 Objectif calorique par jour", min_value=0, value=2000, step=50)
 
 total_calories = {}
 for jour, repas in planning.items():
@@ -124,35 +109,33 @@ for jour in JOURS_SEMAINE:
         st.success(f"✅ {jour} : {kcal} kcal")
 
 # ---------- GRAPHIQUE ----------
-st.markdown("### 📈 Graphique des calories de la semaine")
+st.markdown("### 📊 Graphique des calories")
 fig, ax = plt.subplots()
 ax.bar(total_calories.keys(), total_calories.values(), color=['red' if val > objectif_calories else 'green' for val in total_calories.values()])
-ax.axhline(y=objectif_calories, color='blue', linestyle='--', label=f"Objectif {objectif_calories} kcal")
+ax.axhline(y=objectif_calories, color='blue', linestyle='--', label="Objectif")
 ax.set_ylabel("Calories")
-ax.set_title(f"Semaine {semaine_id}")
 ax.legend()
 plt.xticks(rotation=45)
 st.pyplot(fig)
 
-# ---------- SUGGESTIONS INTELLIGENTES ----------
+# ---------- RECETTES INTELLIGENTES ----------
 st.markdown("---")
-st.subheader("🧠 Suggestions équilibrées intelligentes")
+st.subheader("🤖 Suggestions équilibrées")
 recettes_possibles = []
 for nom, ingredients in recettes.items():
     if all(ing in stock for ing in ingredients):
-        kcal_total = sum(nutrition.get(ing, 0) for ing in ingredients)
-        if kcal_total <= objectif_calories:
-            recettes_possibles.append((nom, kcal_total))
+        kcal = sum(nutrition.get(ing, 0) for ing in ingredients)
+        if kcal <= objectif_calories:
+            recettes_possibles.append((nom, kcal))
 
 if recettes_possibles:
-    st.success("Voici des recettes équilibrées disponibles avec ton stock :")
-    for nom, kcal in sorted(recettes_possibles, key=lambda x: x[1]):
-        st.markdown(f"**{nom}** - {kcal} kcal")
+    for nom, kcal in recettes_possibles:
+        st.markdown(f"- **{nom}** ({kcal} kcal)")
 else:
-    st.info("Aucune recette équilibrée trouvée avec ton stock actuel.")
+    st.info("Aucune recette équilibrée trouvée.")
 
-# ---------- EXPORT PDF ----------
-if st.button("📤 Exporter cette semaine en PDF"):
+# ---------- EXPORT ----------
+if st.button("📤 Exporter PDF"):
     chemin = generer_pdf(planning)
     with open(chemin, "rb") as f:
         st.download_button("📄 Télécharger le PDF", f, file_name=f"planning_{semaine_id}.pdf")
