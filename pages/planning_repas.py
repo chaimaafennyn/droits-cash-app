@@ -47,10 +47,20 @@ st.title("🍽️ Planificateur de Repas Hebdomadaire avec Calendrier")
 # Chargement et date
 planning = charger_planning()
 semaine_actuelle = st.date_input("📅 Choisir un jour de la semaine", datetime.date.today())
-jour_nom = semaine_actuelle.strftime("%A").capitalize()
+# Traduction des jours en français
+jours_traduits = {
+    "Monday": "Lundi",
+    "Tuesday": "Mardi",
+    "Wednesday": "Mercredi",
+    "Thursday": "Jeudi",
+    "Friday": "Vendredi",
+    "Saturday": "Samedi",
+    "Sunday": "Dimanche"
+}
 
-if jour_nom not in JOURS_SEMAINE:
-    jour_nom = "Lundi"
+jour_en = semaine_actuelle.strftime("%A")
+jour_nom = jours_traduits.get(jour_en, "Lundi")
+
 
 st.subheader(f"🗓️ {jour_nom} : Modifier les repas")
 col1, col2, col3 = st.columns(3)
