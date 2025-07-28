@@ -22,11 +22,13 @@ def chemin(nom):
 
 # ---------- GESTION JSON ----------
 def charger_json(fichier, vide):
-    if os.path.exists(fichier):
+    try:
         with open(fichier, "r", encoding="utf-8") as f:
-            return json.load(f)
-    else:
+            contenu = f.read().strip()
+            return json.loads(contenu) if contenu else vide
+    except (json.JSONDecodeError, FileNotFoundError):
         return vide
+
 
 def sauvegarder_json(fichier, data):
     with open(fichier, "w", encoding="utf-8") as f:
