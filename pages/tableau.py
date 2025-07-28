@@ -113,6 +113,29 @@ if st.button("💾 Enregistrer mon stock"):
     sauvegarder_json(FICHIER_STOCK, stock_simplifie)
     st.success("✅ Stock mis à jour avec succès")
 
+# ---------- Suggestions de repas ----------
+st.markdown("---")
+st.subheader("🤖 Suggestions de repas selon mon stock")
+recettes_exemples = {
+    "Omelette aux oignons": ["œufs", "oignons"],
+    "Salade thon-concombre": ["thon", "concombre", "huile"],
+    "Soupe tomate": ["tomate", "oignons", "huile"],
+    "Nouilles sautées": ["nouilles", "œufs", "oignons"],
+    "Tartine fromage miel": ["pain", "fromage", "miel"]
+}
+
+recettes_possibles = []
+for nom, ingredients in recettes_exemples.items():
+    if all(ing in stock for ing in ingredients):
+        recettes_possibles.append(nom)
+
+if recettes_possibles:
+    st.success("🍽️ Tu peux préparer :")
+    for r in recettes_possibles:
+        st.write(f"- {r}")
+else:
+    st.info("Aucune recette trouvée avec ton stock actuel. Ajoute d'autres ingrédients !")
+
 # ---------- Export PDF ----------
 if st.button("📤 Exporter le planning en PDF"):
     chemin = generer_pdf(planning)
