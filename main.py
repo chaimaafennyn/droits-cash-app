@@ -27,6 +27,15 @@ def authentifier(login, mot_de_passe):
         return utilisateurs[login]["role"]
     return None
 
+def charger_json(fichier, vide):
+    try:
+        with open(fichier, "r", encoding="utf-8") as f:
+            contenu = f.read().strip()
+            return json.loads(contenu) if contenu else vide
+    except (json.JSONDecodeError, FileNotFoundError):
+        return vide
+
+
 # ---------- INITIALISATION ----------
 utilisateurs = charger_utilisateurs()
 if "chaimaa" not in utilisateurs:
