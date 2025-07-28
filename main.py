@@ -49,7 +49,7 @@ if onglet == "Connexion":
             st.session_state["utilisateur"] = login
             st.session_state["role"] = role
             st.success(f"Bienvenue {login} !")
-            st.switch_page("app.py")  # Redirection vers l'app principale
+            st.switch_page("pages/app")  # Redirection vers l'app principale
         else:
             st.error("Identifiants incorrects")
 
