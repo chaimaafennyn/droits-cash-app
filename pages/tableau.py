@@ -9,6 +9,7 @@ from fpdf import FPDF
 FICHIER_JSON = "planning.json"
 FICHIER_STOCK = "stock.json"
 FICHIER_RECETTES = "recettes.json"
+FICHIER_NUTRITION = "nutrition.json"
 JOURS_SEMAINE = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
 
 # ---------- FONCTIONS ----------
@@ -49,6 +50,7 @@ st.title("🍽️ Planificateur de Repas Hebdomadaire avec Calendrier")
 planning = charger_json(FICHIER_JSON, {jour: {"Petit-déjeuner": "", "Déjeuner": "", "Dîner": ""} for jour in JOURS_SEMAINE})
 stock = charger_json(FICHIER_STOCK, {})
 recettes = charger_json(FICHIER_RECETTES, {})
+nutrition = charger_json(FICHIER_NUTRITION, {})
 
 jours_traduits = {
     "Monday": "Lundi",
@@ -162,6 +164,28 @@ if recettes:
         st.markdown(f"**{nom}** : {', '.join(ingr)}")
 else:
     st.info("Aucune recette enregistrée pour l'instant.")
+
+# ---------- Suivi nutritionnel ----------
+st.markdown("---")
+st.subheader("🍎 Suivi Nutritionnel (calories approximatives)")
+
+# Table des valeurs nutritives simplifiée (modifiable plus tard)
+valeurs_par_aliment = charger_json(FICHIER_NUTRITION, {
+    "œufs": 70, "thon": 150, "riz": 200, "pain": 80, "fromage": 90,
+    "huile": 120, "banane": 90, "pomme": 80, "lait": 100, "flan": 150
+})
+
+total_calories = {}
+for jour, repas in planning.items():
+    total = 0
+    for texte in repas.values():
+        mots = texte.lower().split()
+        total += sum(valeurs_par_aliment.get(m.strip(",."), 0) for m in mots)
+    total_calories[jour] = total
+
+st.markdown("### Calories estimées par jour :")
+for jour in JOURS_SEMAINE:
+    st.write(f"**{jour}** : {total_calories.get(jour, 0)} kcal")
 
 # ---------- Export PDF ----------
 if st.button("📤 Exporter le planning en PDF"):
