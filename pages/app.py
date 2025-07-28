@@ -34,7 +34,7 @@ def sauvegarder_json(fichier, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 # ---------- INTERFACE ----------
-st.set_page_config(page_title="App Repas", layout="wide")
+st.set_page_config(page_title="App Repas", layout="centered")
 st.title(f"👋 Bienvenue {utilisateur} ({role})")
 
 # ---------- ADMIN : Liste des utilisateurs ----------
@@ -132,7 +132,30 @@ if st.button("💾 Enregistrer le stock"):
 
 # ---------- RECETTES ----------
 st.markdown("---")
-st.subheader("🤖 Suggestions de Recettes Équilibrées")
+st.subheader("📘 Mes Recettes")
+if recettes:
+    for nom, ingr in recettes.items():
+        st.markdown(f"**{nom}** : {', '.join(ingr)}")
+else:
+    st.info("Aucune recette enregistrée.")
+
+# ---------- AJOUT DE RECETTES ----------
+st.markdown("---")
+st.subheader("➕ Ajouter une recette")
+nom_recette = st.text_input("Nom de la recette")
+ingr_recette = st.text_input("Ingrédients (séparés par des virgules)")
+if st.button("Ajouter la recette"):
+    if nom_recette and ingr_recette:
+        liste = [i.strip().lower() for i in ingr_recette.split(",") if i.strip()]
+        recettes[nom_recette] = liste
+        sauvegarder_json("recettes.json", recettes)
+        st.success("✅ Recette ajoutée !")
+    else:
+        st.error("Remplis les champs.")
+
+# ---------- SUGGESTIONS ----------
+st.markdown("---")
+st.subheader("🤖 Recettes possibles avec mon stock")
 recettes_possibles = []
 for nom, ingredients in recettes.items():
     if all(ing in stock for ing in ingredients):
@@ -143,15 +166,27 @@ for nom, ingredients in recettes.items():
 if recettes_possibles:
     for nom, kcal in recettes_possibles:
         st.markdown(f"**{nom}** ({kcal} kcal)")
-        jour_choix = st.selectbox("📅 Jour", JOURS_SEMAINE, key=f"jour_{nom}")
-        moment = st.selectbox("🕒 Moment", ["Petit-déjeuner", "Déjeuner", "Dîner"], key=f"moment_{nom}")
-        if st.button(f"📥 Ajouter '{nom}'", key=f"add_{nom}"):
-            planning_semaine[jour_choix][moment] = nom
+        jour = st.selectbox("Jour", JOURS_SEMAINE, key=f"jour_{nom}")
+        moment = st.selectbox("Moment", ["Petit-déjeuner", "Déjeuner", "Dîner"], key=f"moment_{nom}")
+        if st.button(f"📥 Ajouter {nom}", key=f"btn_{nom}"):
+            planning_semaine[jour][moment] = nom
             planning[semaine_id] = planning_semaine
             sauvegarder_json(chemins["planning"], planning)
-            st.success(f"✅ '{nom}' ajouté à {moment} du {jour_choix}")
+            st.success(f"✅ Ajouté à {moment} du {jour}")
 else:
-    st.info("Aucune recette équilibrée disponible avec ton stock.")
+    st.info("Aucune recette réalisable avec ton stock.")
+
+# ---------- MODIFIER NUTRITION ----------
+st.markdown("---")
+st.subheader("⚙️ Modifier valeurs nutritionnelles")
+df_nutri = pd.DataFrame.from_dict(nutrition, orient='index', columns=['Calories'])
+df_nutri.index.name = 'Aliment'
+df_nutri_edit = st.data_editor(df_nutri, num_rows="dynamic", use_container_width=True)
+if st.button("💾 Sauvegarder les valeurs"):
+    nutri_mod = df_nutri_edit.fillna(0).to_dict(orient='index')
+    nutri_simple = {k: int(v['Calories']) for k, v in nutri_mod.items() if v['Calories'] > 0}
+    sauvegarder_json("nutrition.json", nutri_simple)
+    st.success("✅ Nutrition mise à jour")
 
 # ---------- EXPORT ----------
 def generer_pdf(planning):
