@@ -7,19 +7,20 @@ from fpdf import FPDF
 
 # ---------- CONFIG ----------
 FICHIER_JSON = "planning.json"
+FICHIER_STOCK = "stock.json"
 JOURS_SEMAINE = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
 
 # ---------- FONCTIONS ----------
 
-def charger_planning():
-    if os.path.exists(FICHIER_JSON):
-        with open(FICHIER_JSON, "r", encoding="utf-8") as f:
+def charger_json(fichier, vide):
+    if os.path.exists(fichier):
+        with open(fichier, "r", encoding="utf-8") as f:
             return json.load(f)
     else:
-        return {jour: {"Petit-déjeuner": "", "Déjeuner": "", "Dîner": ""} for jour in JOURS_SEMAINE}
+        return vide
 
-def sauvegarder_planning(data):
-    with open(FICHIER_JSON, "w", encoding="utf-8") as f:
+def sauvegarder_json(fichier, data):
+    with open(fichier, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 def generer_pdf(planning):
@@ -44,8 +45,9 @@ def generer_pdf(planning):
 st.set_page_config(page_title="Planning Repas", layout="wide")
 st.title("🍽️ Planificateur de Repas Hebdomadaire avec Calendrier")
 
-# Chargement et date
-planning = charger_planning()
+planning = charger_json(FICHIER_JSON, {jour: {"Petit-déjeuner": "", "Déjeuner": "", "Dîner": ""} for jour in JOURS_SEMAINE})
+stock = charger_json(FICHIER_STOCK, {})
+
 jours_traduits = {
     "Monday": "Lundi",
     "Tuesday": "Mardi",
@@ -73,20 +75,17 @@ if st.button("💾 Enregistrer pour ce jour"):
     planning[jour_nom]["Petit-déjeuner"] = petit_dej
     planning[jour_nom]["Déjeuner"] = dej
     planning[jour_nom]["Dîner"] = diner
-    sauvegarder_planning(planning)
+    sauvegarder_json(FICHIER_JSON, planning)
     st.success(f"✅ Repas du {jour_nom} mis à jour")
 
 # ---------- Vue tableau interactive ----------
 st.markdown("---")
 st.subheader("📊 Modifier toute la semaine dans un tableau")
-
-# Convertir en DataFrame
 df_planning = pd.DataFrame.from_dict(planning, orient='index')
 df_edit = st.data_editor(df_planning, num_rows="fixed", use_container_width=True)
-
 if st.button("💾 Enregistrer les modifications du tableau"):
     planning_modifie = df_edit.to_dict(orient='index')
-    sauvegarder_planning(planning_modifie)
+    sauvegarder_json(FICHIER_JSON, planning_modifie)
     st.success("✅ Planning modifié via le tableau !")
 
 # ---------- Liste de courses ----------
@@ -101,6 +100,18 @@ if st.button("🛒 Générer une liste de courses"):
     st.markdown("### Liste de courses :")
     for item in courses:
         st.write(f"- {item}")
+
+# ---------- Stock des ingrédients ----------
+st.markdown("---")
+st.subheader("📦 Mon Stock d'ingrédients")
+df_stock = pd.DataFrame.from_dict(stock, orient='index', columns=['Quantité'])
+df_stock.index.name = 'Ingrédient'
+df_stock_edit = st.data_editor(df_stock, num_rows="dynamic", use_container_width=True)
+if st.button("💾 Enregistrer mon stock"):
+    stock_modifie = df_stock_edit.fillna(0).to_dict(orient='index')
+    stock_simplifie = {k: int(v['Quantité']) for k, v in stock_modifie.items() if v['Quantité'] > 0}
+    sauvegarder_json(FICHIER_STOCK, stock_simplifie)
+    st.success("✅ Stock mis à jour avec succès")
 
 # ---------- Export PDF ----------
 if st.button("📤 Exporter le planning en PDF"):
