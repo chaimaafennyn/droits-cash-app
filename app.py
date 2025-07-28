@@ -1,14 +1,30 @@
 import streamlit as st
 
-st.set_page_config(page_title="Accueil – Droits+Cash", layout="centered")
-st.markdown("## 👋 Bienvenue sur Droits+Cash")
+# Jours de la semaine
+jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
 
-st.markdown("""
-Ce site vous aide à découvrir **à quelles aides sociales** vous avez droit  
-et à **générer vos dossiers automatiquement** (RSA, APL, prime d'activité…).
+# Repas pré-remplis (extrait simplifié)
+planning = {
+    "Mardi": {
+        "Petit-déjeuner": "Pain + Vache qui rit + thé + dattes",
+        "Déjeuner (à emporter)": "Salade PDT + thon + concombre + olives",
+        "Dîner": "Nouilles sautées + œuf + tomate concentrée"
+    },
+    # tu complètes avec les autres jours...
+}
 
-Utilisez le menu à gauche pour :
-- Faire une simulation
-- Nous contacter
-- En savoir plus
-""")
+# Interface
+st.title("Mon Plan de Repas de la Semaine")
+
+jour = st.selectbox("Choisis un jour", jours)
+
+if jour in planning:
+    st.subheader(f"Repas du {jour}")
+    for repas, contenu in planning[jour].items():
+        st.write(f"**{repas}** : {contenu}")
+else:
+    st.write("Aucun repas défini pour ce jour.")
+
+if st.checkbox("Afficher recette du dîner"):
+    st.markdown("**Recette Nouilles sautées** :\n- Nouilles + oignons + concentré tomate + œuf\n- Sauter à la poêle 5-7 min.")
+
