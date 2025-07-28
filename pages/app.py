@@ -13,6 +13,10 @@ if "utilisateur" not in st.session_state:
 utilisateur = st.session_state["utilisateur"]
 role = st.session_state["role"]
 
+if "confirm_logout" not in st.session_state:
+    st.session_state["confirm_logout"] = False
+
+
 # ---------- CHEMINS PAR UTILISATEUR ----------
 def chemin(nom):
     return {
@@ -213,6 +217,18 @@ if st.button("📤 Exporter PDF"):
 
 # ---------- DÉCONNEXION ----------
 if st.sidebar.button("🚪 Se déconnecter"):
-    st.session_state.clear()
-    st.success("✅ Déconnexion réussie. Veuillez actualiser la page.")
-    st.stop()
+    st.session_state["confirm_logout"] = True
+
+if st.session_state["confirm_logout"]:
+    with st.sidebar.expander("❓ Confirmer la déconnexion", expanded=True):
+        st.write("Voulez-vous vraiment vous déconnecter ?")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("✅ Oui, déconnecter"):
+                st.session_state.clear()
+                st.success("✅ Déconnexion réussie ! Redirection...")
+                st.switch_page("main.py")  # Redirige vers la page de login
+        with col2:
+            if st.button("❌ Annuler"):
+                st.session_state["confirm_logout"] = False
+
