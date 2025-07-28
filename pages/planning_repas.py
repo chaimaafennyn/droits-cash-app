@@ -2,62 +2,31 @@ import streamlit as st
 import json
 import os
 import pandas as pd
+import datetime
 from fpdf import FPDF
 
-# ---------- FONCTIONS UTILITAIRES ----------
-
+# ---------- CONFIG ----------
 FICHIER_JSON = "planning.json"
+JOURS_SEMAINE = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
 
-# Charger ou créer planning
+# ---------- FONCTIONS ----------
+
 def charger_planning():
     if os.path.exists(FICHIER_JSON):
         with open(FICHIER_JSON, "r", encoding="utf-8") as f:
             return json.load(f)
     else:
-        return {
-            "Mardi": {
-                "Petit-déjeuner": "Pain + Vache qui rit + thé + dattes",
-                "Déjeuner (à emporter)": "Salade pommes de terre + thon + concombre + olives",
-                "Dîner": "Nouilles sautées + œuf + tomate concentrée"
-            },
-            "Mercredi": {
-                "Petit-déjeuner": "Corn flakes + lait + 1 banane",
-                "Déjeuner (à emporter)": "Sandwich omelette + kheli3 + pain",
-                "Dîner": "Velouté tomate + tartine fromage + yaourt"
-            },
-            "Jeudi": {
-                "Petit-déjeuner": "Pain + miel + thé à la menthe + dattes",
-                "Déjeuner": "Quiche sans pâte + salade tomate/concombre",
-                "Dîner": "Soupe tomate + pain + œuf dur + flan"
-            },
-            "Vendredi": {
-                "Petit-déjeuner": "Corn flakes + lait + amandes",
-                "Déjeuner": "Nouilles sautées + kheli3 + oignons",
-                "Dîner": "Salade pommes de terre + olives + yaourt"
-            },
-            "Samedi": {
-                "Petit-déjeuner": "Pain + Vache qui rit + café + dattes",
-                "Déjeuner": "Omelette + pommes de terre sautées + salade",
-                "Dîner": "Soupe tomate + pain + kheli3 + flan"
-            },
-            "Dimanche": {
-                "Petit-déjeuner": "Corn flakes + lait + 1 banane",
-                "Déjeuner": "Salade thon + œuf dur + tomates + olives + pain",
-                "Dîner": "Soupe légère + tartine fromage + glace"
-            }
-        }
+        return {jour: {"Petit-déjeuner": "", "Déjeuner": "", "Dîner": ""} for jour in JOURS_SEMAINE}
 
-# Sauvegarder dans le fichier
 def sauvegarder_planning(data):
     with open(FICHIER_JSON, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-# Générer un PDF à partir du planning
 def generer_pdf(planning):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", 'B', 14)
-    pdf.cell(0, 10, "Planning de Repas", ln=True, align="C")
+    pdf.cell(0, 10, "Planning de Repas Hebdomadaire", ln=True, align="C")
     pdf.set_font("Arial", '', 12)
     for jour, repas in planning.items():
         pdf.ln(5)
@@ -66,70 +35,77 @@ def generer_pdf(planning):
         pdf.set_font("Arial", '', 12)
         for titre, contenu in repas.items():
             pdf.multi_cell(0, 8, f"- {titre}: {contenu}")
-    pdf_path = "planning_repas.pdf"
-    pdf.output(pdf_path)
-    return pdf_path
+    chemin = "planning_repas.pdf"
+    pdf.output(chemin)
+    return chemin
 
 # ---------- INTERFACE STREAMLIT ----------
 
-st.title("🍽️ Planificateur de Repas Hebdomadaire")
+st.set_page_config(page_title="Planning Repas", layout="wide")
+st.title("🍽️ Planificateur de Repas Hebdomadaire avec Calendrier")
 
-# Charger données
+# Chargement et date
 planning = charger_planning()
+semaine_actuelle = st.date_input("📅 Choisir un jour de la semaine", datetime.date.today())
+jour_nom = semaine_actuelle.strftime("%A").capitalize()
 
-# Sélection du jour
-jour = st.selectbox("Choisis un jour :", list(planning.keys()))
-est_travail = st.checkbox("Est-ce un jour de travail ?", value=(jour in ["Mardi", "Mercredi"]))
+if jour_nom not in JOURS_SEMAINE:
+    jour_nom = "Lundi"
 
-st.subheader(f"Modifier les repas du {jour} :")
+st.subheader(f"🗓️ {jour_nom} : Modifier les repas")
+col1, col2, col3 = st.columns(3)
+with col1:
+    petit_dej = st.text_input("🍞 Petit-déjeuner", value=planning[jour_nom].get("Petit-déjeuner", ""))
+with col2:
+    dej = st.text_input("🥗 Déjeuner", value=planning[jour_nom].get("Déjeuner", ""))
+with col3:
+    diner = st.text_input("🍲 Dîner", value=planning[jour_nom].get("Dîner", ""))
 
-# Champs de modification
-petit_dej = st.text_input("🍞 Petit-déjeuner", value=planning[jour].get("Petit-déjeuner", ""))
-dej_key = "Déjeuner (à emporter)" if est_travail else "Déjeuner"
-dej = st.text_input("🥗 Déjeuner", value=planning[jour].get(dej_key, ""))
-diner = st.text_input("🍲 Dîner", value=planning[jour].get("Dîner", ""))
-
-# Sauvegarde
-if st.button("💾 Enregistrer les modifications"):
-    planning[jour]["Petit-déjeuner"] = petit_dej
-    planning[jour]["Dîner"] = diner
-    if est_travail:
-        planning[jour]["Déjeuner (à emporter)"] = dej
-        planning[jour].pop("Déjeuner", None)
-    else:
-        planning[jour]["Déjeuner"] = dej
-        planning[jour].pop("Déjeuner (à emporter)", None)
+if st.button("💾 Enregistrer pour ce jour"):
+    planning[jour_nom]["Petit-déjeuner"] = petit_dej
+    planning[jour_nom]["Déjeuner"] = dej
+    planning[jour_nom]["Dîner"] = diner
     sauvegarder_planning(planning)
-    st.success(f"✅ Repas du {jour} mis à jour avec succès !")
-
-# ---------- Affichage recettes ----------
-recettes = {
-    "Soupe tomate": "Faire revenir un oignon, ajouter 1 càs concentré tomate, eau, sel, cumin, un peu de kheli3, cuire 10 min.",
-    "Quiche sans pâte": "Mélanger 2 œufs, 1 verre de lait, 1 càs maïzena, oignon, fromage. Cuire au four 20 min à 180°C.",
-    "Nouilles sautées": "Faire revenir oignon + tomate concentrée, ajouter nouilles cuites, œuf battu, sauter 5 min."
-}
+    st.success(f"✅ Repas du {jour_nom} mis à jour")
 
 st.markdown("---")
-recette_du_jour = st.selectbox("📖 Voir une recette :", list(recettes.keys()))
-st.markdown(f"**Recette :** {recettes[recette_du_jour]}")
+st.subheader("📋 Vue complète de la semaine")
 
-# ---------- Liste de courses ----------
-st.markdown("---")
+# Tableau interactif semaine
+edited = False
+for jour in JOURS_SEMAINE:
+    with st.expander(f"📅 {jour}"):
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            pdj = st.text_input(f"Petit-déj - {jour}", value=planning[jour]["Petit-déjeuner"], key=f"pdj_{jour}")
+        with col2:
+            dj = st.text_input(f"Déjeuner - {jour}", value=planning[jour]["Déjeuner"], key=f"dej_{jour}")
+        with col3:
+            dn = st.text_input(f"Dîner - {jour}", value=planning[jour]["Dîner"], key=f"diner_{jour}")
+        planning[jour]["Petit-déjeuner"] = pdj
+        planning[jour]["Déjeuner"] = dj
+        planning[jour]["Dîner"] = dn
+        edited = True
+
+if st.button("💾 Enregistrer toute la semaine"):
+    sauvegarder_planning(planning)
+    st.success("✅ Semaine mise à jour avec succès")
+
+# Liste de courses
 if st.button("🛒 Générer une liste de courses"):
     ingredients = []
     for repas in planning.values():
         for desc in repas.values():
             mots = desc.lower().replace(",", "").split()
             ingredients.extend(mots)
-    mots_communs = {"+", "de", "du", "la", "et", "le", "un", "avec", "ou"}
-    ingredients_uniques = sorted(set([m for m in ingredients if len(m) > 3 and m not in mots_communs]))
-    st.markdown("### Liste de courses proposée :")
-    for item in ingredients_uniques:
+    stopwords = {"+", "de", "du", "la", "et", "le", "un", "avec", "ou", "des"}
+    courses = sorted(set([m for m in ingredients if len(m) > 3 and m not in stopwords]))
+    st.markdown("### Liste de courses :")
+    for item in courses:
         st.write(f"- {item}")
 
-# ---------- Export PDF ----------
-st.markdown("---")
+# Export PDF
 if st.button("📤 Exporter le planning en PDF"):
-    pdf_path = generer_pdf(planning)
-    with open(pdf_path, "rb") as f:
-        st.download_button("Télécharger le PDF", f, file_name="planning_repas.pdf")
+    chemin = generer_pdf(planning)
+    with open(chemin, "rb") as f:
+        st.download_button("📄 Télécharger le PDF", f, file_name="planning_repas.pdf")
