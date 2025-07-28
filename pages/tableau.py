@@ -8,6 +8,7 @@ from fpdf import FPDF
 # ---------- CONFIG ----------
 FICHIER_JSON = "planning.json"
 FICHIER_STOCK = "stock.json"
+FICHIER_RECETTES = "recettes.json"
 JOURS_SEMAINE = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
 
 # ---------- FONCTIONS ----------
@@ -47,6 +48,7 @@ st.title("🍽️ Planificateur de Repas Hebdomadaire avec Calendrier")
 
 planning = charger_json(FICHIER_JSON, {jour: {"Petit-déjeuner": "", "Déjeuner": "", "Dîner": ""} for jour in JOURS_SEMAINE})
 stock = charger_json(FICHIER_STOCK, {})
+recettes = charger_json(FICHIER_RECETTES, {})
 
 jours_traduits = {
     "Monday": "Lundi",
@@ -116,16 +118,10 @@ if st.button("💾 Enregistrer mon stock"):
 # ---------- Suggestions de repas ----------
 st.markdown("---")
 st.subheader("🤖 Suggestions de repas selon mon stock")
-recettes_exemples = {
-    "Omelette aux oignons": ["œufs", "oignons"],
-    "Salade thon-concombre": ["thon", "concombre", "huile"],
-    "Soupe tomate": ["tomate", "oignons", "huile"],
-    "Nouilles sautées": ["nouilles", "œufs", "oignons"],
-    "Tartine fromage miel": ["pain", "fromage", "miel"]
-}
+recettes_utiles = recettes.copy()
 
 recettes_possibles = []
-for nom, ingredients in recettes_exemples.items():
+for nom, ingredients in recettes_utiles.items():
     if all(ing in stock for ing in ingredients):
         recettes_possibles.append(nom)
 
@@ -135,6 +131,21 @@ if recettes_possibles:
         st.write(f"- {r}")
 else:
     st.info("Aucune recette trouvée avec ton stock actuel. Ajoute d'autres ingrédients !")
+
+# ---------- Ajout de recettes personnalisées ----------
+st.markdown("---")
+st.subheader("📘 Ajouter une nouvelle recette")
+nom_recette = st.text_input("Nom de la recette")
+ingredients_recette = st.text_input("Ingrédients (séparés par des virgules)")
+
+if st.button("➕ Ajouter la recette"):
+    if nom_recette and ingredients_recette:
+        ingredients_liste = [ing.strip().lower() for ing in ingredients_recette.split(",") if ing.strip()]
+        recettes[nom_recette] = ingredients_liste
+        sauvegarder_json(FICHIER_RECETTES, recettes)
+        st.success(f"✅ Recette '{nom_recette}' ajoutée avec succès !")
+    else:
+        st.error("Merci de remplir le nom et les ingrédients.")
 
 # ---------- Export PDF ----------
 if st.button("📤 Exporter le planning en PDF"):
