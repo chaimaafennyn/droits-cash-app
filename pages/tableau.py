@@ -50,7 +50,10 @@ st.title("🍽️ Planificateur de Repas Hebdomadaire avec Calendrier")
 planning = charger_json(FICHIER_JSON, {jour: {"Petit-déjeuner": "", "Déjeuner": "", "Dîner": ""} for jour in JOURS_SEMAINE})
 stock = charger_json(FICHIER_STOCK, {})
 recettes = charger_json(FICHIER_RECETTES, {})
-nutrition = charger_json(FICHIER_NUTRITION, {})
+nutrition = charger_json(FICHIER_NUTRITION, {
+    "œufs": 70, "thon": 150, "riz": 200, "pain": 80, "fromage": 90,
+    "huile": 120, "banane": 90, "pomme": 80, "lait": 100, "flan": 150
+})
 
 jours_traduits = {
     "Monday": "Lundi",
@@ -169,11 +172,7 @@ else:
 st.markdown("---")
 st.subheader("🍎 Suivi Nutritionnel (calories approximatives)")
 
-# Table des valeurs nutritives simplifiée (modifiable plus tard)
-valeurs_par_aliment = charger_json(FICHIER_NUTRITION, {
-    "œufs": 70, "thon": 150, "riz": 200, "pain": 80, "fromage": 90,
-    "huile": 120, "banane": 90, "pomme": 80, "lait": 100, "flan": 150
-})
+valeurs_par_aliment = nutrition
 
 total_calories = {}
 for jour, repas in planning.items():
@@ -186,6 +185,18 @@ for jour, repas in planning.items():
 st.markdown("### Calories estimées par jour :")
 for jour in JOURS_SEMAINE:
     st.write(f"**{jour}** : {total_calories.get(jour, 0)} kcal")
+
+# ---------- Édition des valeurs nutritionnelles ----------
+st.markdown("---")
+st.subheader("⚙️ Modifier les valeurs nutritionnelles par aliment")
+df_nutrition = pd.DataFrame.from_dict(valeurs_par_aliment, orient='index', columns=['Calories'])
+df_nutrition.index.name = 'Aliment'
+df_nutrition_edit = st.data_editor(df_nutrition, num_rows="dynamic", use_container_width=True)
+if st.button("💾 Enregistrer les calories"):
+    nutri_modifie = df_nutrition_edit.fillna(0).to_dict(orient='index')
+    nutrition_simplifie = {k: int(v['Calories']) for k, v in nutri_modifie.items() if v['Calories'] > 0}
+    sauvegarder_json(FICHIER_NUTRITION, nutrition_simplifie)
+    st.success("✅ Valeurs nutritionnelles mises à jour")
 
 # ---------- Export PDF ----------
 if st.button("📤 Exporter le planning en PDF"):
