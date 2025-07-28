@@ -14,7 +14,6 @@ FICHIER_NUTRITION = "nutrition.json"
 JOURS_SEMAINE = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
 
 # ---------- FONCTIONS ----------
-
 def charger_json(fichier, vide):
     if os.path.exists(fichier):
         with open(fichier, "r", encoding="utf-8") as f:
@@ -26,13 +25,13 @@ def sauvegarder_json(fichier, data):
     with open(fichier, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-def generer_pdf(planning_semaine):
+def generer_pdf(planning):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(0, 10, "Planning de Repas Hebdomadaire", ln=True, align="C")
     pdf.set_font("Arial", '', 12)
-    for jour, repas in planning_semaine.items():
+    for jour, repas in planning.items():
         pdf.ln(5)
         pdf.set_font("Arial", 'B', 12)
         pdf.cell(0, 10, jour, ln=True)
@@ -47,7 +46,6 @@ def get_week_id(date):
     return date.strftime("%Y-W%U")
 
 # ---------- CHARGEMENT DONNÉES ----------
-
 st.set_page_config(page_title="Planning Repas", layout="wide")
 st.title("🍽️ Planificateur de Repas Hebdomadaire (Multi-semaines)")
 
@@ -60,7 +58,6 @@ nutrition = charger_json(FICHIER_NUTRITION, {
 })
 
 # ---------- SÉLECTION DE SEMAINE ----------
-
 date_actuelle = st.date_input("📅 Choisir une date de la semaine")
 semaine_id = get_week_id(date_actuelle)
 st.markdown(f"### 📆 Semaine sélectionnée : `{semaine_id}`")
@@ -71,7 +68,6 @@ if semaine_id not in planning_global:
 planning = planning_global[semaine_id]
 
 # ---------- MODIFICATION PAR JOUR ----------
-
 jours_traduits = {
     "Monday": "Lundi", "Tuesday": "Mardi", "Wednesday": "Mercredi",
     "Thursday": "Jeudi", "Friday": "Vendredi",
@@ -98,7 +94,7 @@ if st.button("💾 Enregistrer pour ce jour"):
 
 # ---------- VUE TABLEAU ----------
 st.markdown("---")
-st.subheader("📊 Modifier la semaine complète dans un tableau")
+st.subheader("📊 Modifier toute la semaine dans un tableau")
 df_planning = pd.DataFrame.from_dict(planning, orient='index')
 df_edit = st.data_editor(df_planning, num_rows="fixed", use_container_width=True)
 if st.button("💾 Enregistrer toute la semaine"):
@@ -110,6 +106,8 @@ if st.button("💾 Enregistrer toute la semaine"):
 # ---------- SUIVI NUTRITION ----------
 st.markdown("---")
 st.subheader("🍎 Suivi Nutritionnel (Calories par jour)")
+objectif_calories = st.number_input("🎯 Objectif calorique par jour (kcal)", min_value=0, value=2000, step=50)
+
 total_calories = {}
 for jour, repas in planning.items():
     total = 0
@@ -117,15 +115,22 @@ for jour, repas in planning.items():
         mots = texte.lower().split()
         total += sum(nutrition.get(m.strip(",."), 0) for m in mots)
     total_calories[jour] = total
+
 for jour in JOURS_SEMAINE:
-    st.write(f"**{jour}** : {total_calories.get(jour, 0)} kcal")
+    kcal = total_calories.get(jour, 0)
+    if kcal > objectif_calories:
+        st.error(f"❌ {jour} : {kcal} kcal (au-dessus de l'objectif)")
+    else:
+        st.success(f"✅ {jour} : {kcal} kcal")
 
 # ---------- GRAPHIQUE ----------
 st.markdown("### 📈 Graphique des calories de la semaine")
 fig, ax = plt.subplots()
-ax.bar(total_calories.keys(), total_calories.values())
+ax.bar(total_calories.keys(), total_calories.values(), color=['red' if val > objectif_calories else 'green' for val in total_calories.values()])
+ax.axhline(y=objectif_calories, color='blue', linestyle='--', label=f"Objectif {objectif_calories} kcal")
 ax.set_ylabel("Calories")
 ax.set_title(f"Semaine {semaine_id}")
+ax.legend()
 plt.xticks(rotation=45)
 st.pyplot(fig)
 
