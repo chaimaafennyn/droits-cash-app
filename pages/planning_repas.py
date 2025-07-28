@@ -134,6 +134,23 @@ ax.legend()
 plt.xticks(rotation=45)
 st.pyplot(fig)
 
+# ---------- SUGGESTIONS INTELLIGENTES ----------
+st.markdown("---")
+st.subheader("🧠 Suggestions équilibrées intelligentes")
+recettes_possibles = []
+for nom, ingredients in recettes.items():
+    if all(ing in stock for ing in ingredients):
+        kcal_total = sum(nutrition.get(ing, 0) for ing in ingredients)
+        if kcal_total <= objectif_calories:
+            recettes_possibles.append((nom, kcal_total))
+
+if recettes_possibles:
+    st.success("Voici des recettes équilibrées disponibles avec ton stock :")
+    for nom, kcal in sorted(recettes_possibles, key=lambda x: x[1]):
+        st.markdown(f"**{nom}** - {kcal} kcal")
+else:
+    st.info("Aucune recette équilibrée trouvée avec ton stock actuel.")
+
 # ---------- EXPORT PDF ----------
 if st.button("📤 Exporter cette semaine en PDF"):
     chemin = generer_pdf(planning)
