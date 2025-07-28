@@ -29,7 +29,6 @@ def charger_json(fichier, vide):
     except (json.JSONDecodeError, FileNotFoundError):
         return vide
 
-
 def sauvegarder_json(fichier, data):
     with open(fichier, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -51,6 +50,7 @@ else:
 chemins = chemin(cible)
 planning = charger_json(chemins["planning"], {})
 stock = charger_json(chemins["stock"], {})
+recettes = charger_json("recettes.json", {})
 nutrition = charger_json("nutrition.json", {
     "œufs": 70, "thon": 150, "riz": 200, "pain": 80, "fromage": 90,
     "huile": 120, "banane": 90, "pomme": 80, "lait": 100, "flan": 150
@@ -58,7 +58,6 @@ nutrition = charger_json("nutrition.json", {
 
 JOURS_SEMAINE = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
 
-# ---------- SÉLECTION DE SEMAINE ----------
 def get_week_id(date):
     return date.strftime("%Y-W%U")
 
@@ -79,9 +78,9 @@ fr_jour = {
 }[jour_nom]
 
 st.subheader(f"🗓️ Modifier les repas du {fr_jour}")
-petit = st.text_input("🍞 Petit-déjeuner", planning_semaine[fr_jour].get("Petit-déjeuner", ""))
-dej = st.text_input("🥗 Déjeuner", planning_semaine[fr_jour].get("Déjeuner", ""))
-diner = st.text_input("🍲 Dîner", planning_semaine[fr_jour].get("Dîner", ""))
+petit = st.text_area("🍞 Petit-déjeuner", planning_semaine[fr_jour].get("Petit-déjeuner", ""))
+dej = st.text_area("🥗 Déjeuner", planning_semaine[fr_jour].get("Déjeuner", ""))
+diner = st.text_area("🍲 Dîner", planning_semaine[fr_jour].get("Dîner", ""))
 
 if st.button("💾 Enregistrer ce jour"):
     planning_semaine[fr_jour] = {
@@ -118,6 +117,41 @@ ax.axhline(y=objectif, color='blue', linestyle='--')
 ax.set_ylabel("Calories")
 ax.set_title("Calories par jour")
 st.pyplot(fig)
+
+# ---------- STOCK ----------
+st.markdown("---")
+st.subheader("📦 Mon Stock")
+df_stock = pd.DataFrame.from_dict(stock, orient='index', columns=['Quantité'])
+df_stock.index.name = 'Ingrédient'
+df_stock_edit = st.data_editor(df_stock, num_rows="dynamic", use_container_width=True)
+if st.button("💾 Enregistrer le stock"):
+    stock_mod = df_stock_edit.fillna(0).to_dict(orient='index')
+    stock_simple = {k: int(v['Quantité']) for k, v in stock_mod.items() if v['Quantité'] > 0}
+    sauvegarder_json(chemins["stock"], stock_simple)
+    st.success("✅ Stock mis à jour")
+
+# ---------- RECETTES ----------
+st.markdown("---")
+st.subheader("🤖 Suggestions de Recettes Équilibrées")
+recettes_possibles = []
+for nom, ingredients in recettes.items():
+    if all(ing in stock for ing in ingredients):
+        kcal = sum(nutrition.get(ing, 0) for ing in ingredients)
+        if kcal <= objectif:
+            recettes_possibles.append((nom, kcal))
+
+if recettes_possibles:
+    for nom, kcal in recettes_possibles:
+        st.markdown(f"**{nom}** ({kcal} kcal)")
+        jour_choix = st.selectbox("📅 Jour", JOURS_SEMAINE, key=f"jour_{nom}")
+        moment = st.selectbox("🕒 Moment", ["Petit-déjeuner", "Déjeuner", "Dîner"], key=f"moment_{nom}")
+        if st.button(f"📥 Ajouter '{nom}'", key=f"add_{nom}"):
+            planning_semaine[jour_choix][moment] = nom
+            planning[semaine_id] = planning_semaine
+            sauvegarder_json(chemins["planning"], planning)
+            st.success(f"✅ '{nom}' ajouté à {moment} du {jour_choix}")
+else:
+    st.info("Aucune recette équilibrée disponible avec ton stock.")
 
 # ---------- EXPORT ----------
 def generer_pdf(planning):
