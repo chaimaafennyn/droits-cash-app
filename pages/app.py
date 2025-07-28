@@ -212,8 +212,7 @@ if st.button("📤 Exporter PDF"):
         st.download_button("📄 Télécharger", f, file_name=pdf_file)
 
 # ---------- DÉCONNEXION ----------
-st.sidebar.markdown("---")
 if st.sidebar.button("🚪 Se déconnecter"):
-    del st.session_state["utilisateur"]
-    del st.session_state["role"]
-    st.experimental_rerun()
+    st.session_state.clear()
+    st.success("✅ Déconnexion réussie. Veuillez actualiser la page.")
+    st.stop()
