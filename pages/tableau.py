@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import datetime
 from fpdf import FPDF
+import matplotlib.pyplot as plt
 
 # ---------- CONFIG ----------
 FICHIER_JSON = "planning.json"
@@ -185,6 +186,17 @@ for jour, repas in planning.items():
 st.markdown("### Calories estimées par jour :")
 for jour in JOURS_SEMAINE:
     st.write(f"**{jour}** : {total_calories.get(jour, 0)} kcal")
+
+# ---------- Graphique des calories ----------
+st.markdown("### 📊 Graphique des calories hebdomadaires")
+fig, ax = plt.subplots()
+jours = list(total_calories.keys())
+valeurs = list(total_calories.values())
+ax.bar(jours, valeurs)
+ax.set_ylabel("Calories")
+ax.set_title("Total des calories par jour")
+plt.xticks(rotation=45)
+st.pyplot(fig)
 
 # ---------- Édition des valeurs nutritionnelles ----------
 st.markdown("---")
