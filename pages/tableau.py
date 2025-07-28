@@ -128,7 +128,14 @@ for nom, ingredients in recettes_utiles.items():
 if recettes_possibles:
     st.success("🍽️ Tu peux préparer :")
     for r in recettes_possibles:
-        st.write(f"- {r}")
+        with st.expander(r):
+            st.write(", ".join(recettes[r]))
+            jour_choix = st.selectbox(f"📆 Choisir un jour pour ajouter '{r}'", JOURS_SEMAINE, key=f"sel_{r}")
+            moment = st.selectbox("🕒 Choisir un moment", ["Petit-déjeuner", "Déjeuner", "Dîner"], key=f"moment_{r}")
+            if st.button(f"📥 Ajouter '{r}' au planning", key=f"add_{r}"):
+                planning[jour_choix][moment] = r
+                sauvegarder_json(FICHIER_JSON, planning)
+                st.success(f"✅ '{r}' ajouté à {moment} de {jour_choix}")
 else:
     st.info("Aucune recette trouvée avec ton stock actuel. Ajoute d'autres ingrédients !")
 
@@ -146,6 +153,15 @@ if st.button("➕ Ajouter la recette"):
         st.success(f"✅ Recette '{nom_recette}' ajoutée avec succès !")
     else:
         st.error("Merci de remplir le nom et les ingrédients.")
+
+# ---------- Visualisation des recettes ----------
+st.markdown("---")
+st.subheader("📚 Toutes mes recettes enregistrées")
+if recettes:
+    for nom, ingr in recettes.items():
+        st.markdown(f"**{nom}** : {', '.join(ingr)}")
+else:
+    st.info("Aucune recette enregistrée pour l'instant.")
 
 # ---------- Export PDF ----------
 if st.button("📤 Exporter le planning en PDF"):
