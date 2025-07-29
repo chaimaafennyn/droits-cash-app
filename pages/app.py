@@ -125,14 +125,26 @@ st.pyplot(fig)
 # ---------- STOCK ----------
 st.markdown("---")
 st.subheader("📦 Mon Stock")
-df_stock = pd.DataFrame.from_dict(stock, orient='index', columns=['Quantité'])
-df_stock.index.name = 'Ingrédient'
+if not stock:
+    df_stock = pd.DataFrame(columns=["Ingrédient", "Quantité"])
+else:
+    df_stock = pd.DataFrame([{"Ingrédient": k, "Quantité": v} for k, v in stock.items()])
+
 df_stock_edit = st.data_editor(df_stock, num_rows="dynamic", use_container_width=True)
+
 if st.button("💾 Enregistrer le stock"):
-    stock_mod = df_stock_edit.fillna(0).to_dict(orient='index')
-    stock_simple = {k: int(v['Quantité']) for k, v in stock_mod.items() if v['Quantité'] > 0}
-    sauvegarder_json(chemins["stock"], stock_simple)
-    st.success("✅ Stock mis à jour")
+    try:
+        stock_mod = df_stock_edit.dropna()
+        stock_simple = {
+            row["Ingrédient"]: int(row["Quantité"])
+            for _, row in stock_mod.iterrows()
+            if str(row["Ingrédient"]).strip() != "" and row["Quantité"] > 0
+        }
+        sauvegarder_json(chemins["stock"], stock_simple)
+        st.success("✅ Stock mis à jour")
+    except Exception as e:
+        st.error(f"❌ Erreur dans les données : {e}")
+
 
 # ---------- RECETTES ----------
 st.markdown("---")
