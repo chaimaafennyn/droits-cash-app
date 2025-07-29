@@ -65,6 +65,9 @@ for ingredient in list(stock.keys()) + courses:
         nutrition[ingredient] = 0
 sauvegarder_json("nutrition.json", nutrition)
 
+unites = charger_json("unites.json", {})
+
+
 JOURS_SEMAINE = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
 
 def get_week_id(date):
@@ -216,21 +219,29 @@ st.pyplot(fig)
 st.markdown("---")
 st.subheader("📦 Mon Stock")
 if not stock:
-    df_stock = pd.DataFrame(columns=["Ingrédient", "Quantité"])
+    df_stock = pd.DataFrame(columns=["Ingrédient", "Quantité", "Unité"])
 else:
-    df_stock = pd.DataFrame([{"Ingrédient": k, "Quantité": v} for k, v in stock.items()])
+    df_stock = pd.DataFrame([
+        {"Ingrédient": k, "Quantité": v, "Unité": unites.get(k, "")}
+        for k, v in stock.items()
+    ])
 
 df_stock_edit = st.data_editor(df_stock, num_rows="dynamic", use_container_width=True)
 
 if st.button("💾 Enregistrer le stock"):
     try:
         stock_mod = df_stock_edit.dropna()
-        stock_simple = {
-            str(row["Ingrédient"]).strip(): int(row["Quantité"])
-            for _, row in stock_mod.iterrows()
-            if str(row["Ingrédient"]).strip() != "" and int(row["Quantité"]) > 0
-        }
+        stock_simple = {}
+        for _, row in stock_mod.iterrows():
+            ingr = str(row["Ingrédient"]).strip()
+            if ingr and int(row["Quantité"]) > 0:
+                stock_simple[ingr] = int(row["Quantité"])
+                unite = str(row.get("Unité", "")).strip()
+                unites[ingr] = unite
+        
         sauvegarder_json(chemins["stock"], stock_simple)
+        sauvegarder_json("unites.json", unites)
+
         st.success("✅ Stock mis à jour")
     except Exception as e:
         st.error(f"❌ Erreur dans les données : {e}")
