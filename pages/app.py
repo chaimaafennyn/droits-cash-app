@@ -218,6 +218,7 @@ ax.set_ylabel("Calories")
 ax.set_title("Calories par jour")
 st.pyplot(fig)
 
+# ---------- STOCK ----------
 st.markdown("---")
 st.subheader("📦 Mon Stock")
 
@@ -262,6 +263,16 @@ if st.button("💾 Enregistrer le stock"):
         sauvegarder_json("unites.json", nouvelle_unite)
         sauvegarder_json("categories.json", nouvelles_cats)
         st.success("✅ Stock, unités et catégories mis à jour")
+        # ---------- AFFICHAGE GROUPÉ PAR CATÉGORIE ----------
+        st.markdown("### 📚 Vue par catégorie")
+        if not stock:
+            st.info("Stock vide.")
+        else:
+            for cat in sorted(set(categories.get(k, "Autres") for k in stock)):
+                st.markdown(f"#### 📂 {cat}")
+                for ingr in sorted([k for k in stock if categories.get(k, "Autres") == cat]):
+                    unite = unites.get(ingr, "")
+                    st.write(f"- {ingr} : {stock[ingr]} {unite}")
     except Exception as e:
         st.error(f"❌ Erreur dans les données : {e}")
 
