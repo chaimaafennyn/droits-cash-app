@@ -257,10 +257,26 @@ if recettes_possibles:
         jour = st.selectbox("Jour", JOURS_SEMAINE, key=f"jour_{nom}")
         moment = st.selectbox("Moment", ["Petit-déjeuner", "Déjeuner", "Dîner"], key=f"moment_{nom}")
         if st.button(f"📥 Ajouter {nom}", key=f"btn_{nom}"):
+            # Ajout dans le planning
             planning_semaine[jour][moment] = nom
             planning[semaine_id] = planning_semaine
             sauvegarder_json(chemins["planning"], planning)
-            st.success(f"✅ Ajouté à {moment} du {jour}")
+        
+            # Déduction du stock
+            for ingr in recettes[nom]:
+                if ingr in stock and stock[ingr] > 0:
+                    stock[ingr] -= 1
+                    if stock[ingr] == 0:
+                        del stock[ingr]
+                        if ingr not in courses:
+                            courses.append(ingr)
+        
+            sauvegarder_json(chemins["stock"], stock)
+            sauvegarder_json(chemins["courses"], courses)
+        
+            st.success(f"✅ {nom} ajouté à {moment} du {jour} et stock mis à jour.")
+            st.experimental_rerun()
+
 else:
     st.info("Aucune recette réalisable avec ton stock.")
 
