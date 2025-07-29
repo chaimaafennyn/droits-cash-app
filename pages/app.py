@@ -22,6 +22,7 @@ def chemin(nom):
     return {
         "planning": f"planning_{nom}.json",
         "stock": f"stock_{nom}.json",
+        "courses": f"courses_{nom}.json"
     }
 
 # ---------- GESTION JSON ----------
@@ -54,18 +55,15 @@ else:
 chemins = chemin(cible)
 planning = charger_json(chemins["planning"], {})
 stock = charger_json(chemins["stock"], {})
+courses = charger_json(chemins["courses"], [])
 recettes = charger_json("recettes.json", {})
-nutrition = charger_json("nutrition.json", {
-    "œufs": 70, "thon": 150, "riz": 200, "pain": 80, "fromage": 90,
-    "huile": 120, "banane": 90, "pomme": 80, "lait": 100, "flan": 150
-})
+nutrition = charger_json("nutrition.json", {})
 
-# Compléter les valeurs nutritionnelles si des ingrédients du stock sont absents
-for ingredient in stock:
+# Synchroniser stock + courses dans nutrition
+for ingredient in list(stock.keys()) + courses:
     if ingredient not in nutrition:
         nutrition[ingredient] = 0
 sauvegarder_json("nutrition.json", nutrition)
-
 
 JOURS_SEMAINE = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
 
@@ -89,6 +87,7 @@ fr_jour = {
 }[jour_nom]
 
 st.subheader(f"🗓️ Modifier les repas du {fr_jour}")
+all_ingredients = list(stock.keys()) + courses
 
 def nettoyer_default(valeur, options):
     if isinstance(valeur, list):
@@ -99,30 +98,30 @@ def nettoyer_default(valeur, options):
         cleaned = []
     return [v for v in cleaned if v in options]
 
+def afficher_options(options):
+    affichage = []
+    for opt in options:
+        if opt in stock:
+            affichage.append(f"✅ {opt}")
+        elif opt in courses:
+            affichage.append(f"❌ {opt}")
+        else:
+            affichage.append(opt)
+    return affichage
 
-all_ingredients = list(stock.keys())
+petit = st.multiselect("🍞 Petit-déjeuner", options=all_ingredients,
+                       default=nettoyer_default(planning_semaine[fr_jour].get("Petit-déjeuner", ""), all_ingredients),
+                       format_func=lambda x: f"✅ {x}" if x in stock else (f"❌ {x}" if x in courses else x))
 
-petit = st.multiselect(
-    "🍞 Petit-déjeuner",
-    options=all_ingredients,
-    default=nettoyer_default(planning_semaine[fr_jour].get("Petit-déjeuner", ""), all_ingredients)
-)
+dej = st.multiselect("🥗 Déjeuner", options=all_ingredients,
+                     default=nettoyer_default(planning_semaine[fr_jour].get("Déjeuner", ""), all_ingredients),
+                     format_func=lambda x: f"✅ {x}" if x in stock else (f"❌ {x}" if x in courses else x))
 
-dej = st.multiselect(
-    "🥗 Déjeuner",
-    options=all_ingredients,
-    default=nettoyer_default(planning_semaine[fr_jour].get("Déjeuner", ""), all_ingredients)
-)
+diner = st.multiselect("🍲 Dîner", options=all_ingredients,
+                       default=nettoyer_default(planning_semaine[fr_jour].get("Dîner", ""), all_ingredients),
+                       format_func=lambda x: f"✅ {x}" if x in stock else (f"❌ {x}" if x in courses else x))
 
-diner = st.multiselect(
-    "🍲 Dîner",
-    options=all_ingredients,
-    default=nettoyer_default(planning_semaine[fr_jour].get("Dîner", ""), all_ingredients)
-)
-
-
-
-if st.button("💾 Enregistrer ce jour"):
+if st.button("📏 Enregistrer ce jour"):
     planning_semaine[fr_jour] = {
         "Petit-déjeuner": ", ".join(petit),
         "Déjeuner": ", ".join(dej),
@@ -131,6 +130,41 @@ if st.button("💾 Enregistrer ce jour"):
     planning[semaine_id] = planning_semaine
     sauvegarder_json(chemins["planning"], planning)
     st.success(f"✅ {fr_jour} enregistré pour {cible}")
+
+# ---------- COURSES ----------
+st.markdown("---")
+st.subheader("🛍️ Mes Courses")
+
+st.markdown("### Ingrédients à acheter")
+if courses:
+    for ingr in courses:
+        col1, col2, col3 = st.columns([5, 2, 2])
+        with col1:
+            st.write(ingr)
+        with col2:
+            if st.button("✅ Acheté", key=f"achete_{ingr}"):
+                stock[ingr] = stock.get(ingr, 0)
+                courses.remove(ingr)
+                sauvegarder_json(chemins["stock"], stock)
+                sauvegarder_json(chemins["courses"], courses)
+                st.experimental_rerun()
+        with col3:
+            if st.button("🗑️ Supprimer", key=f"suppr_{ingr}"):
+                courses.remove(ingr)
+                sauvegarder_json(chemins["courses"], courses)
+                st.experimental_rerun()
+else:
+    st.info("Aucune course enregistrée")
+
+nouvel_ing = st.text_input("Ajouter un ingrédient à acheter")
+if st.button("➕ Ajouter à mes courses"):
+    if nouvel_ing and nouvel_ing not in courses and nouvel_ing not in stock:
+        courses.append(nouvel_ing.strip())
+        sauvegarder_json(chemins["courses"], courses)
+        st.success("✅ Ingrédient ajouté aux courses")
+    else:
+        st.warning("⛔ Déjà dans les stocks ou les courses")
+
 
 
 # ---------- SUIVI CALORIQUE ----------
