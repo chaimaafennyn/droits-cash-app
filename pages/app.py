@@ -150,6 +150,7 @@ if st.button("📏 Enregistrer ce jour"):
     st.experimental_rerun()
 
 
+
 # ---------- COURSES ----------
 st.markdown("---")
 st.subheader("🛍️ Mes Courses")
