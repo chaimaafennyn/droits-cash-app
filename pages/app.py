@@ -91,14 +91,25 @@ fr_jour = {
 st.subheader(f"🗓️ Modifier les repas du {fr_jour}")
 all_ingredients = list(stock.keys())
 
+def nettoyer_default(valeur):
+    if isinstance(valeur, list):
+        return valeur
+    elif isinstance(valeur, str):
+        return [i.strip() for i in valeur.split(",") if i.strip()]
+    else:
+        return []
+
+all_ingredients = list(stock.keys())
+
 petit = st.multiselect("🍞 Petit-déjeuner", options=all_ingredients,
-                       default=planning_semaine[fr_jour].get("Petit-déjeuner", "").split(", "))
+                       default=nettoyer_default(planning_semaine[fr_jour].get("Petit-déjeuner", "")))
 
 dej = st.multiselect("🥗 Déjeuner", options=all_ingredients,
-                     default=planning_semaine[fr_jour].get("Déjeuner", "").split(", "))
+                     default=nettoyer_default(planning_semaine[fr_jour].get("Déjeuner", "")))
 
 diner = st.multiselect("🍲 Dîner", options=all_ingredients,
-                       default=planning_semaine[fr_jour].get("Dîner", "").split(", "))
+                       default=nettoyer_default(planning_semaine[fr_jour].get("Dîner", "")))
+
 
 if st.button("💾 Enregistrer ce jour"):
     planning_semaine[fr_jour] = {
@@ -109,6 +120,7 @@ if st.button("💾 Enregistrer ce jour"):
     planning[semaine_id] = planning_semaine
     sauvegarder_json(chemins["planning"], planning)
     st.success(f"✅ {fr_jour} enregistré pour {cible}")
+
 
 # ---------- SUIVI CALORIQUE ----------
 st.markdown("---")
