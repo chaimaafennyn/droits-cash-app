@@ -136,14 +136,15 @@ if st.button("💾 Enregistrer le stock"):
     try:
         stock_mod = df_stock_edit.dropna()
         stock_simple = {
-            row["Ingrédient"]: int(row["Quantité"])
+            str(row["Ingrédient"]).strip(): int(row["Quantité"])
             for _, row in stock_mod.iterrows()
-            if str(row["Ingrédient"]).strip() != "" and row["Quantité"] > 0
+            if str(row["Ingrédient"]).strip() != "" and int(row["Quantité"]) > 0
         }
         sauvegarder_json(chemins["stock"], stock_simple)
         st.success("✅ Stock mis à jour")
     except Exception as e:
         st.error(f"❌ Erreur dans les données : {e}")
+
 
 
 # ---------- RECETTES ----------
