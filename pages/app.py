@@ -60,6 +60,13 @@ nutrition = charger_json("nutrition.json", {
     "huile": 120, "banane": 90, "pomme": 80, "lait": 100, "flan": 150
 })
 
+# Compléter les valeurs nutritionnelles si des ingrédients du stock sont absents
+for ingredient in stock:
+    if ingredient not in nutrition:
+        nutrition[ingredient] = 0
+sauvegarder_json("nutrition.json", nutrition)
+
+
 JOURS_SEMAINE = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
 
 def get_week_id(date):
@@ -82,15 +89,22 @@ fr_jour = {
 }[jour_nom]
 
 st.subheader(f"🗓️ Modifier les repas du {fr_jour}")
-petit = st.text_area("🍞 Petit-déjeuner", planning_semaine[fr_jour].get("Petit-déjeuner", ""))
-dej = st.text_area("🥗 Déjeuner", planning_semaine[fr_jour].get("Déjeuner", ""))
-diner = st.text_area("🍲 Dîner", planning_semaine[fr_jour].get("Dîner", ""))
+all_ingredients = list(stock.keys())
+
+petit = st.multiselect("🍞 Petit-déjeuner", options=all_ingredients,
+                       default=planning_semaine[fr_jour].get("Petit-déjeuner", "").split(", "))
+
+dej = st.multiselect("🥗 Déjeuner", options=all_ingredients,
+                     default=planning_semaine[fr_jour].get("Déjeuner", "").split(", "))
+
+diner = st.multiselect("🍲 Dîner", options=all_ingredients,
+                       default=planning_semaine[fr_jour].get("Dîner", "").split(", "))
 
 if st.button("💾 Enregistrer ce jour"):
     planning_semaine[fr_jour] = {
-        "Petit-déjeuner": petit,
-        "Déjeuner": dej,
-        "Dîner": diner
+        "Petit-déjeuner": ", ".join(petit),
+        "Déjeuner": ", ".join(dej),
+        "Dîner": ", ".join(diner)
     }
     planning[semaine_id] = planning_semaine
     sauvegarder_json(chemins["planning"], planning)
