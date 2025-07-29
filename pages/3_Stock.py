@@ -2,6 +2,19 @@ import streamlit as st
 import pandas as pd
 from utils import charger_json, sauvegarder_json, chemin, get_user_and_role
 
+# 🎨 Couleurs par catégorie
+cat_colors = {
+    "Fruits": "#FFDDC1",
+    "Légumes": "#C1FFD7",
+    "Protéines": "#FFD1DC",
+    "Produits laitiers": "#D1E0FF",
+    "Féculents": "#FFFAC1",
+    "Épices": "#FFE0AC",
+    "Boissons": "#E0D1FF",
+    "Autres": "#F0F0F0"
+}
+
+
 utilisateur, role = get_user_and_role()
 chemins = chemin(utilisateur)
 
@@ -59,23 +72,35 @@ df = pd.DataFrame(filtered_data)
 if df.empty:
     st.info("Aucun ingrédient dans cette catégorie.")
 else:
+    color = cat_colors.get(cat_selection, "#F0F0F0")
+    st.markdown(
+        f'<div style="background-color:{color}; padding:15px; border-radius:8px;"><b>{cat_selection}</b> - Ingrédients</div>',
+        unsafe_allow_html=True
+    )
     st.markdown("### ✏️ Modifier les ingrédients de cette catégorie")
+
     edited = []
     for i in range(len(df)):
-        col1, col2, col3, col4, col5 = st.columns([4, 2, 2, 2, 1])
-        ingr = st.text_input(f"Ingrédient_{i}", df.at[i, "Ingrédient"], key=f"ingr_{i}")
-        qte = st.number_input(f"Quantité_{i}", 0, 10000, int(df.at[i, "Quantité"]), key=f"qte_{i}")
-        unit = st.selectbox(f"Unité_{i}", unit_choices,
-                            index=unit_choices.index(df.at[i, "Unité"]) if df.at[i, "Unité"] in unit_choices else 0,
-                            key=f"unit_{i}")
-        delete = st.checkbox("🗑️", key=f"del_{i}")
-        if not delete and ingr.strip():
-            edited.append({"Ingrédient": ingr.strip(), "Quantité": qte, "Unité": unit, "Catégorie": cat_selection})
-        elif delete:
-            if ingr in stock:
-                del stock[ingr]
-                unites.pop(ingr, None)
-                categories.pop(ingr, None)
+        with st.container():
+            col1, col2, col3, col4, col5 = st.columns([4, 2, 2, 1, 1])
+            ingr = st.text_input(f"Ingrédient_{i}", df.at[i, "Ingrédient"], key=f"ingr_{i}")
+            qte = st.number_input(f"Qté_{i}", 0, 10000, int(df.at[i, "Quantité"]), key=f"qte_{i}")
+            unit = st.selectbox(f"Unité_{i}", unit_choices,
+                                index=unit_choices.index(df.at[i, "Unité"]) if df.at[i, "Unité"] in unit_choices else 0,
+                                key=f"unit_{i}")
+            delete = st.checkbox("🗑️", key=f"del_{i}")
+            if not delete and ingr.strip():
+                edited.append({
+                    "Ingrédient": ingr.strip(),
+                    "Quantité": qte,
+                    "Unité": unit,
+                    "Catégorie": cat_selection
+                })
+            elif delete:
+                if ingr in stock:
+                    del stock[ingr]
+                    unites.pop(ingr, None)
+                    categories.pop(ingr, None)
 
     if st.button("💾 Enregistrer les modifications"):
         new_stock = {row["Ingrédient"]: int(row["Quantité"]) for row in edited}
