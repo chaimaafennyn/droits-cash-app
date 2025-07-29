@@ -122,14 +122,33 @@ diner = st.multiselect("🍲 Dîner", options=all_ingredients,
                        format_func=lambda x: f"✅ {x}" if x in stock else (f"❌ {x}" if x in courses else x))
 
 if st.button("📏 Enregistrer ce jour"):
-    planning_semaine[fr_jour] = {
-        "Petit-déjeuner": ", ".join(petit),
-        "Déjeuner": ", ".join(dej),
-        "Dîner": ", ".join(diner)
+    repas_du_jour = {
+        "Petit-déjeuner": petit,
+        "Déjeuner": dej,
+        "Dîner": diner
     }
+
+    # Mise à jour du planning
+    planning_semaine[fr_jour] = {k: ", ".join(v) for k, v in repas_du_jour.items()}
     planning[semaine_id] = planning_semaine
     sauvegarder_json(chemins["planning"], planning)
-    st.success(f"✅ {fr_jour} enregistré pour {cible}")
+
+    # Déduction du stock
+    for liste_ingredients in repas_du_jour.values():
+        for ingr in liste_ingredients:
+            if ingr in stock and stock[ingr] > 0:
+                stock[ingr] -= 1
+                if stock[ingr] == 0:
+                    del stock[ingr]
+                    if ingr not in courses:
+                        courses.append(ingr)
+
+    sauvegarder_json(chemins["stock"], stock)
+    sauvegarder_json(chemins["courses"], courses)
+
+    st.success(f"✅ {fr_jour} enregistré pour {cible} et stock mis à jour.")
+    st.experimental_rerun()
+
 
 # ---------- COURSES ----------
 st.markdown("---")
