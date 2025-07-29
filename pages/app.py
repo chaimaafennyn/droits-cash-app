@@ -89,26 +89,37 @@ fr_jour = {
 }[jour_nom]
 
 st.subheader(f"🗓️ Modifier les repas du {fr_jour}")
-all_ingredients = list(stock.keys())
 
-def nettoyer_default(valeur):
+def nettoyer_default(valeur, options):
     if isinstance(valeur, list):
-        return valeur
+        cleaned = valeur
     elif isinstance(valeur, str):
-        return [i.strip() for i in valeur.split(",") if i.strip()]
+        cleaned = [i.strip() for i in valeur.split(",") if i.strip()]
     else:
-        return []
+        cleaned = []
+    return [v for v in cleaned if v in options]
+
 
 all_ingredients = list(stock.keys())
 
-petit = st.multiselect("🍞 Petit-déjeuner", options=all_ingredients,
-                       default=nettoyer_default(planning_semaine[fr_jour].get("Petit-déjeuner", "")))
+petit = st.multiselect(
+    "🍞 Petit-déjeuner",
+    options=all_ingredients,
+    default=nettoyer_default(planning_semaine[fr_jour].get("Petit-déjeuner", ""), all_ingredients)
+)
 
-dej = st.multiselect("🥗 Déjeuner", options=all_ingredients,
-                     default=nettoyer_default(planning_semaine[fr_jour].get("Déjeuner", "")))
+dej = st.multiselect(
+    "🥗 Déjeuner",
+    options=all_ingredients,
+    default=nettoyer_default(planning_semaine[fr_jour].get("Déjeuner", ""), all_ingredients)
+)
 
-diner = st.multiselect("🍲 Dîner", options=all_ingredients,
-                       default=nettoyer_default(planning_semaine[fr_jour].get("Dîner", "")))
+diner = st.multiselect(
+    "🍲 Dîner",
+    options=all_ingredients,
+    default=nettoyer_default(planning_semaine[fr_jour].get("Dîner", ""), all_ingredients)
+)
+
 
 
 if st.button("💾 Enregistrer ce jour"):
