@@ -166,12 +166,12 @@ if courses:
                 courses.remove(ingr)
                 sauvegarder_json(chemins["stock"], stock)
                 sauvegarder_json(chemins["courses"], courses)
-                st.experimental_rerun()
+                st.rerun()
         with col3:
             if st.button("🗑️ Supprimer", key=f"suppr_{ingr}"):
                 courses.remove(ingr)
                 sauvegarder_json(chemins["courses"], courses)
-                st.experimental_rerun()
+                st.rerun()
 else:
     st.info("Aucune course enregistrée")
 
@@ -294,7 +294,7 @@ if recettes_possibles:
             sauvegarder_json(chemins["courses"], courses)
         
             st.success(f"✅ {nom} ajouté à {moment} du {jour} et stock mis à jour.")
-            st.experimental_rerun()
+            st.rerun()
 
 else:
     st.info("Aucune recette réalisable avec ton stock.")
