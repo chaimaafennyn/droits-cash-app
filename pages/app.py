@@ -67,6 +67,9 @@ sauvegarder_json("nutrition.json", nutrition)
 
 unites = charger_json("unites.json", {})
 
+categories = charger_json("categories.json", {})
+
+
 
 JOURS_SEMAINE = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
 
@@ -215,52 +218,53 @@ ax.set_ylabel("Calories")
 ax.set_title("Calories par jour")
 st.pyplot(fig)
 
-# ---------- STOCK ----------
-# ---------- STOCK ----------
 st.markdown("---")
 st.subheader("📦 Mon Stock")
 
-# Liste prédéfinie d'unités
 unit_choices = ["g", "kg", "ml", "cl", "L", "pcs", "càs", "càc", ""]
+category_choices = ["Fruits", "Légumes", "Protéines", "Produits laitiers", "Féculents", "Épices", "Boissons", "Autres"]
 
-# Charger unités si elles existent
-unites = charger_json("unites.json", {})
-
-# Préparer DataFrame avec unités
+# Préparer DataFrame avec unités et catégories
 stock_data = []
 for ingr, qte in stock.items():
     stock_data.append({
         "Ingrédient": ingr,
         "Quantité": qte,
-        "Unité": unites.get(ingr, "")
+        "Unité": unites.get(ingr, ""),
+        "Catégorie": categories.get(ingr, "")
     })
 
 df_stock = pd.DataFrame(stock_data)
 
-# Édition avec selectbox personnalisée par ligne
+# Édition personnalisée
 edited_rows = []
-st.write("### Modifier le stock et les unités")
+st.write("### Modifier le stock, unités et catégories")
 for i in range(len(df_stock)):
-    col1, col2, col3 = st.columns([4, 2, 2])
-    with col1:
-        ingr = st.text_input(f"Ingrédient_{i}", df_stock.at[i, "Ingrédient"], key=f"ingr_{i}")
-    with col2:
-        qte = st.number_input(f"Quantité_{i}", 0, 10000, int(df_stock.at[i, "Quantité"]), key=f"qte_{i}")
-    with col3:
-        unit = st.selectbox(f"Unité_{i}", unit_choices, index=unit_choices.index(df_stock.at[i, "Unité"]) if df_stock.at[i, "Unité"] in unit_choices else 0, key=f"unit_{i}")
+    col1, col2, col3, col4 = st.columns([4, 2, 2, 2])
+    ingr = st.text_input(f"Ingrédient_{i}", df_stock.at[i, "Ingrédient"], key=f"ingr_{i}")
+    qte = st.number_input(f"Quantité_{i}", 0, 10000, int(df_stock.at[i, "Quantité"]), key=f"qte_{i}")
+    unit = st.selectbox(f"Unité_{i}", unit_choices,
+                        index=unit_choices.index(df_stock.at[i, "Unité"]) if df_stock.at[i, "Unité"] in unit_choices else 0,
+                        key=f"unit_{i}")
+    cat = st.selectbox(f"Catégorie_{i}", category_choices,
+                       index=category_choices.index(df_stock.at[i, "Catégorie"]) if df_stock.at[i, "Catégorie"] in category_choices else 0,
+                       key=f"cat_{i}")
     if ingr.strip():
-        edited_rows.append({"Ingrédient": ingr.strip(), "Quantité": qte, "Unité": unit})
+        edited_rows.append({"Ingrédient": ingr.strip(), "Quantité": qte, "Unité": unit, "Catégorie": cat})
 
 # Enregistrement
 if st.button("💾 Enregistrer le stock"):
     try:
         nouveau_stock = {row["Ingrédient"]: int(row["Quantité"]) for row in edited_rows if row["Quantité"] > 0}
         nouvelle_unite = {row["Ingrédient"]: row["Unité"] for row in edited_rows if row["Unité"]}
+        nouvelles_cats = {row["Ingrédient"]: row["Catégorie"] for row in edited_rows if row["Catégorie"]}
         sauvegarder_json(chemins["stock"], nouveau_stock)
         sauvegarder_json("unites.json", nouvelle_unite)
-        st.success("✅ Stock et unités mis à jour")
+        sauvegarder_json("categories.json", nouvelles_cats)
+        st.success("✅ Stock, unités et catégories mis à jour")
     except Exception as e:
         st.error(f"❌ Erreur dans les données : {e}")
+
 
 
 
