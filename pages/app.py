@@ -147,8 +147,7 @@ if st.button("📏 Enregistrer ce jour"):
     sauvegarder_json(chemins["courses"], courses)
 
     st.success(f"✅ {fr_jour} enregistré pour {cible} et stock mis à jour.")
-    st.experimental_rerun()
-
+    st.rerun()  # ✅ à la place de st.experimental_rerun()
 
 
 # ---------- COURSES ----------
