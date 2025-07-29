@@ -216,33 +216,49 @@ ax.set_title("Calories par jour")
 st.pyplot(fig)
 
 # ---------- STOCK ----------
+# ---------- STOCK ----------
 st.markdown("---")
 st.subheader("📦 Mon Stock")
-if not stock:
-    df_stock = pd.DataFrame(columns=["Ingrédient", "Quantité", "Unité"])
-else:
-    df_stock = pd.DataFrame([
-        {"Ingrédient": k, "Quantité": v, "Unité": unites.get(k, "")}
-        for k, v in stock.items()
-    ])
 
-df_stock_edit = st.data_editor(df_stock, num_rows="dynamic", use_container_width=True)
+# Liste prédéfinie d'unités
+unit_choices = ["g", "kg", "ml", "cl", "L", "pcs", "càs", "càc", ""]
 
+# Charger unités si elles existent
+unites = charger_json("unites.json", {})
+
+# Préparer DataFrame avec unités
+stock_data = []
+for ingr, qte in stock.items():
+    stock_data.append({
+        "Ingrédient": ingr,
+        "Quantité": qte,
+        "Unité": unites.get(ingr, "")
+    })
+
+df_stock = pd.DataFrame(stock_data)
+
+# Édition avec selectbox personnalisée par ligne
+edited_rows = []
+st.write("### Modifier le stock et les unités")
+for i in range(len(df_stock)):
+    col1, col2, col3 = st.columns([4, 2, 2])
+    with col1:
+        ingr = st.text_input(f"Ingrédient_{i}", df_stock.at[i, "Ingrédient"], key=f"ingr_{i}")
+    with col2:
+        qte = st.number_input(f"Quantité_{i}", 0, 10000, int(df_stock.at[i, "Quantité"]), key=f"qte_{i}")
+    with col3:
+        unit = st.selectbox(f"Unité_{i}", unit_choices, index=unit_choices.index(df_stock.at[i, "Unité"]) if df_stock.at[i, "Unité"] in unit_choices else 0, key=f"unit_{i}")
+    if ingr.strip():
+        edited_rows.append({"Ingrédient": ingr.strip(), "Quantité": qte, "Unité": unit})
+
+# Enregistrement
 if st.button("💾 Enregistrer le stock"):
     try:
-        stock_mod = df_stock_edit.dropna()
-        stock_simple = {}
-        for _, row in stock_mod.iterrows():
-            ingr = str(row["Ingrédient"]).strip()
-            if ingr and int(row["Quantité"]) > 0:
-                stock_simple[ingr] = int(row["Quantité"])
-                unite = str(row.get("Unité", "")).strip()
-                unites[ingr] = unite
-        
-        sauvegarder_json(chemins["stock"], stock_simple)
-        sauvegarder_json("unites.json", unites)
-
-        st.success("✅ Stock mis à jour")
+        nouveau_stock = {row["Ingrédient"]: int(row["Quantité"]) for row in edited_rows if row["Quantité"] > 0}
+        nouvelle_unite = {row["Ingrédient"]: row["Unité"] for row in edited_rows if row["Unité"]}
+        sauvegarder_json(chemins["stock"], nouveau_stock)
+        sauvegarder_json("unites.json", nouvelle_unite)
+        st.success("✅ Stock et unités mis à jour")
     except Exception as e:
         st.error(f"❌ Erreur dans les données : {e}")
 
