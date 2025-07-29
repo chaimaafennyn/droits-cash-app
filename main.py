@@ -59,6 +59,7 @@ if onglet == "Connexion":
             st.session_state["role"] = role
             st.success(f"Bienvenue {login} !")
             st.switch_page("pages/app.py")  # Redirection vers l'app principale
+            st.switch_page("pages/1_planning.py")
         else:
             st.error("Identifiants incorrects")
 
