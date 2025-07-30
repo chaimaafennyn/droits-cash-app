@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from utils import charger_json, sauvegarder_json, chemin, get_user_and_role
+from utils import charger_json, sauvegarder_json, chemin, verifier_connexion
 
 # 🎨 Couleurs par catégorie
 cat_colors = {
@@ -15,7 +15,7 @@ cat_colors = {
 }
 
 
-utilisateur, role = get_user_and_role()
+utilisateur, role = verifier_connexion()
 chemins = chemin(utilisateur)
 
 stock = charger_json(chemins["stock"], {})
