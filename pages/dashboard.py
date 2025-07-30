@@ -13,7 +13,7 @@ st.markdown("---")
 
 # Sections accessibles
 st.subheader("📌 Navigation rapide")
-st.markdown("- 📅 [Planning des repas](./Planning.py)")
+st.markdown("- 📅 [Planning des repas](./Planning)")
 st.markdown("- 📦 [Mon stock](./Stock)")
 st.markdown("- 🛒 [Ma liste de courses](./Courses)")
 st.markdown("- 📘 [Mes recettes](./Recettes)")
