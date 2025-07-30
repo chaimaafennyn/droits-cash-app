@@ -2,6 +2,8 @@ import streamlit as st
 import json
 import os
 import datetime
+from utils import get_user_and_role
+
 
 def chemin(nom):
     return {
@@ -22,11 +24,16 @@ def sauvegarder_json(fichier, data):
     with open(fichier, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+import streamlit as st
+from utils import get_user_and_role
+
+# 🔐 Vérifie que l'utilisateur est bien connecté
 if "utilisateur" not in st.session_state:
-    st.error("⚠️ Veuillez vous connecter via main.py")
+    st.error("⚠️ Vous devez vous connecter d'abord depuis l'accueil.")
     st.stop()
-utilisateur = st.session_state["utilisateur"]
-role = st.session_state["role"]
+
+utilisateur, role = get_user_and_role()
+
 
 if role == "admin":
     st.sidebar.subheader("👥 Comptes utilisateurs")
