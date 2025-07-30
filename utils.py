@@ -1,6 +1,15 @@
 import json
 import os
 
+import streamlit as st
+
+def verifier_connexion():
+    if "utilisateur" not in st.session_state:
+        st.error("⚠️ Vous devez vous connecter depuis la page principale.")
+        st.stop()
+    return st.session_state["utilisateur"], st.session_state["role"]
+
+
 def chemin(nom):
     return {
         "planning": f"planning_{nom}.json",
