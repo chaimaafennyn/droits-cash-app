@@ -3,9 +3,10 @@ import json
 import os
 import datetime
 from utils import get_user_and_role
-from utils import verifier_connexion
 
-utilisateur, role = verifier_connexion()
+from utils import get_user_and_role
+
+utilisateur, role = get_user_and_role()
 
 def chemin(nom):
     return {
