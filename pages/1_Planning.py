@@ -5,7 +5,7 @@ import datetime
 from utils import get_user_and_role
 from utils import verifier_connexion
 
-
+utilisateur, role = verifier_connexion()
 
 def chemin(nom):
     return {
@@ -27,14 +27,13 @@ def sauvegarder_json(fichier, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 import streamlit as st
-from utils import get_user_and_role
 
-# 🔐 Vérifie que l'utilisateur est bien connecté
 if "utilisateur" not in st.session_state:
-    st.error("⚠️ Vous devez vous connecter d'abord depuis l'accueil.")
+    st.error("⚠️ Veuillez vous connecter via main.py")
     st.stop()
+utilisateur = st.session_state["utilisateur"]
+role = st.session_state["role"]
 
-utilisateur, role = verifier_connexion()
 
 
 if role == "admin":
