@@ -26,13 +26,6 @@ def sauvegarder_json(fichier, data):
     with open(fichier, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-import streamlit as st
-
-if "utilisateur" not in st.session_state:
-    st.error("⚠️ Veuillez vous connecter via main.py")
-    st.stop()
-utilisateur = st.session_state["utilisateur"]
-role = st.session_state["role"]
 
 
 
