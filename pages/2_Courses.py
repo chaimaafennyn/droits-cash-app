@@ -1,6 +1,11 @@
 
 import streamlit as st
-from utils import charger_json, sauvegarder_json, chemin, get_user_and_role
+from utils import charger_json, sauvegarder_json, chemin
+
+from utils import verifier_connexion
+
+utilisateur, role = verifier_connexion()
+
 
 utilisateur, role = get_user_and_role()
 chemins = chemin(utilisateur)
