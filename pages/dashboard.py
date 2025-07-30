@@ -1,8 +1,8 @@
 import streamlit as st
-from utils import get_user_and_role
 
-# Récupérer l'utilisateur et son rôle
-utilisateur, role = get_user_and_role()
+from utils import verifier_connexion
+utilisateur, role = verifier_connexion()
+
 
 # Page de bienvenue
 st.set_page_config(page_title="Accueil", layout="centered")
