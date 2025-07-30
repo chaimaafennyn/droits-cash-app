@@ -2,10 +2,10 @@
 import streamlit as st
 from fpdf import FPDF
 import datetime
-from utils import chemin, charger_json, get_user_and_role
+from utils import chemin, charger_json, verifier_connexion
 
 # --- Authentification
-utilisateur, role = get_user_and_role()
+utilisateur, role = verifier_connexion()
 chemins = chemin(utilisateur)
 
 # --- Chargement du planning
