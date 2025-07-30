@@ -58,7 +58,9 @@ if onglet == "Connexion":
             st.session_state["utilisateur"] = login
             st.session_state["role"] = role
             st.success(f"Bienvenue {login} !")
-            st.switch_page("pages/dashboard.py")  # Redirection vers l'app principale
+            st.experimental_set_query_params(page="dashboard")
+            st.rerun()
+
         else:
             st.error("Identifiants incorrects")
 
