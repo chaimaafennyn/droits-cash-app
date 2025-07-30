@@ -7,7 +7,6 @@ from utils import verifier_connexion
 utilisateur, role = verifier_connexion()
 
 
-utilisateur, role = get_user_and_role()
 chemins = chemin(utilisateur)
 stock = charger_json(chemins["stock"], {})
 courses = charger_json(chemins["courses"], [])
