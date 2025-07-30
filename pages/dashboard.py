@@ -13,12 +13,12 @@ st.markdown("---")
 
 # Sections accessibles
 st.subheader("📌 Navigation rapide")
-st.markdown("- 📅 [Planning des repas](./planning.py)")
-st.markdown("- 📦 [Mon stock](./stock)")
-st.markdown("- 🛒 [Ma liste de courses](./courses)")
-st.markdown("- 📘 [Mes recettes](./recettes)")
-st.markdown("- 🍎 [Suivi nutritionnel](./nutrition)")
-st.markdown("- 🧾 [Exporter PDF](./export)")
+st.markdown("- 📅 [Planning des repas](./Planning.py)")
+st.markdown("- 📦 [Mon stock](./Stock)")
+st.markdown("- 🛒 [Ma liste de courses](./Courses)")
+st.markdown("- 📘 [Mes recettes](./Recettes)")
+st.markdown("- 🍎 [Suivi nutritionnel](./Nutrition)")
+st.markdown("- 🧾 [Exporter PDF](./Export)")
 
 # Admin uniquement
 if role == "admin":
