@@ -30,10 +30,4 @@ def sauvegarder_json(fichier, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 import streamlit as st
 
-def get_user_and_role():
-    if "utilisateur" in st.session_state and "role" in st.session_state:
-        return st.session_state["utilisateur"], st.session_state["role"]
-    else:
-        st.error("⚠️ Vous devez vous connecter d'abord depuis l'accueil.")
-        st.stop()
 
