@@ -3,6 +3,8 @@ import json
 import os
 import datetime
 from utils import get_user_and_role
+from utils import verifier_connexion
+
 
 
 def chemin(nom):
@@ -32,7 +34,7 @@ if "utilisateur" not in st.session_state:
     st.error("⚠️ Vous devez vous connecter d'abord depuis l'accueil.")
     st.stop()
 
-utilisateur, role = get_user_and_role()
+utilisateur, role = verifier_connexion()
 
 
 if role == "admin":
