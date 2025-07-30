@@ -28,10 +28,12 @@ def charger_json(fichier, vide):
 def sauvegarder_json(fichier, data):
     with open(fichier, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+import streamlit as st
 
 def get_user_and_role():
-    import streamlit as st
-    if "utilisateur" not in st.session_state:
-        st.error("⚠️ Veuillez vous connecter via main.py")
+    if "utilisateur" in st.session_state and "role" in st.session_state:
+        return st.session_state["utilisateur"], st.session_state["role"]
+    else:
+        st.error("⚠️ Vous devez vous connecter d'abord depuis l'accueil.")
         st.stop()
-    return st.session_state["utilisateur"], st.session_state["role"]
+
