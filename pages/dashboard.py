@@ -3,10 +3,6 @@ import streamlit as st
 from utils import verifier_connexion
 utilisateur, role = verifier_connexion()
 
-params = st.experimental_get_query_params()
-if "page" not in params or params["page"][0] != "dashboard":
-    st.experimental_set_query_params(page="dashboard")
-
 
 
 # Page de bienvenue
